@@ -9,44 +9,41 @@ RESET='\033[0m'
 CONFIG_DIR="/config"
 OLD_CONFIG="/config/Plex Media Server"
 
-if [ ! -x /dev/dri/card0 ] || [ ! -x /dev/dri/renderD128 ]; then
-    echo 2>&1 -e "${RED}####################### NOTICE #######################${RESET}"
-    echo 2>&1
-    echo 2>&1 -e "${RED}     No permission to access /dev/dri/card0 or${RESET}"
-    echo 2>&1 -e "${RED}     /dev/dri/renderD128. Correcting permissions.${RESET}"
-    echo 2>&1
-    echo 2>&1 -e "${RED}#######################################################${RESET}"
-    echo 2>&1
-
-    chmod 777 /dev/dri/card*
-    chmod 777 /dev/dri/renderD128
+if [ -e /dev/dri/renderD128 ] && [ ! -x /dev/dri/renderD128 ]; then
+    2>&1 echo -e "${RED}####################### WARNING #######################${RESET}"
+    2>&1 echo
+    2>&1 echo -e "${RED}     No permission to access /dev/dri/renderD128 (or /dev/dri/card*)!${RESET}"
+    2>&1 echo -e "${RED}     Please ensure these devices have the execute permission set.${RESET}"
+    2>&1 echo
+    2>&1 echo -e "${RED}#######################################################${RESET}"
+    2>&1 echo
 fi
 
 if [ -d "$OLD_CONFIG" ] && mountpoint -q "$OLD_CONFIG"; then
     rm -rf /var/lib/plexmediaserver
     ln -sf "$CONFIG_DIR" /var/lib/plexmediaserver
 
-    echo 2>&1 -e "${RED}####################### NOTICE #######################${RESET}"
-    echo 2>&1
-    echo 2>&1 -e "${RED}         The config mountpoint has changed!${RESET}"
-    echo 2>&1 -e "${RED}        Please change the volume as follows:${RESET}"
-    echo 2>&1
-    echo 2>&1 -e "${CYANBOLD}     '$OLD_CONFIG'${RESET} -> ${CYANBOLD}'$CONFIG_DIR'${RESET}"
-    echo 2>&1
-    echo 2>&1 -e "${RED}######################################################${RESET}"
-    echo 2>&1
+    2>&1 echo -e "${RED}####################### NOTICE #######################${RESET}"
+    2>&1 echo
+    2>&1 echo -e "${RED}         The config mountpoint has changed!${RESET}"
+    2>&1 echo -e "${RED}        Please change the volume as follows:${RESET}"
+    2>&1 echo
+    2>&1 echo -e "${CYANBOLD}     '$OLD_CONFIG'${RESET} -> ${CYANBOLD}'$CONFIG_DIR'${RESET}"
+    2>&1 echo
+    2>&1 echo -e "${RED}######################################################${RESET}"
+    2>&1 echo
 
     CONFIG_DIR="$OLD_CONFIG"
 fi
 
 if su-exec -e [ ! -w "$CONFIG_DIR" ]; then
-    echo 2>&1 -e "${RED}####################### WARNING #######################${RESET}"
-    echo 2>&1
-    echo 2>&1 -e "${RED}     No permission to write in '$CONFIG_DIR' directory.${RESET}"
-    echo 2>&1 -e "${RED}       Correcting permissions to prevent a crash.${RESET}"
-    echo 2>&1
-    echo 2>&1 -e "${RED}#######################################################${RESET}"
-    echo 2>&1
+    2>&1 echo -e "${RED}####################### WARNING #######################${RESET}"
+    2>&1 echo
+    2>&1 echo -e "${RED}     No permission to write in '$CONFIG_DIR' directory.${RESET}"
+    2>&1 echo -e "${RED}       Correcting permissions to prevent a crash.${RESET}"
+    2>&1 echo
+    2>&1 echo -e "${RED}#######################################################${RESET}"
+    2>&1 echo
 
     chown "$SUID:$SGID" "$CONFIG_DIR"
     chmod o+rw "$CONFIG_DIR"
