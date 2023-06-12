@@ -4,9 +4,11 @@ This is a fork of [spritsail/plex-media-server](https://github.com/spritsail/ple
 
 If the following PR is merged I will be able to delete this fork: [spritsail/plex-media-server/pull/42](https://github.com/spritsail/plex-media-server/pull/42)
 
+- Image: `ghcr.io/sammcj/plex-amd-container:latest`
+
 [![Build and push container image](https://github.com/sammcj/plex-amd-container/actions/workflows/build-image.yml/badge.svg)](https://github.com/sammcj/plex-amd-container/actions/workflows/build-image.yml)
 
-Below is information from the original/upstream README.md
+_Information below is from the original/upstream README.md_
 
 ---
 
