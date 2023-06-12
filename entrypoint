@@ -1,0 +1,101 @@
+#!/bin/sh
+set -e
+
+# ANSI colour escape sequences
+RED='\033[0;31m'
+CYANBOLD='\033[1;36m'
+RESET='\033[0m'
+
+CONFIG_DIR="/config"
+OLD_CONFIG="/config/Plex Media Server"
+
+if [ ! -x /dev/dri/card0 ] || [ ! -x /dev/dri/renderD128 ]; then
+    echo 2>&1 -e "${RED}####################### NOTICE #######################${RESET}"
+    echo 2>&1
+    echo 2>&1 -e "${RED}     No permission to access /dev/dri/card0 or${RESET}"
+    echo 2>&1 -e "${RED}     /dev/dri/renderD128. Correcting permissions.${RESET}"
+    echo 2>&1
+    echo 2>&1 -e "${RED}#######################################################${RESET}"
+    echo 2>&1
+
+    chmod 777 /dev/dri/card0
+    chmod 777 /dev/dri/renderD128
+fi
+
+if [ -d "$OLD_CONFIG" ] && mountpoint -q "$OLD_CONFIG"; then
+    rm -rf /var/lib/plexmediaserver
+    ln -sf "$CONFIG_DIR" /var/lib/plexmediaserver
+
+    echo 2>&1 -e "${RED}####################### NOTICE #######################${RESET}"
+    echo 2>&1
+    echo 2>&1 -e "${RED}         The config mountpoint has changed!${RESET}"
+    echo 2>&1 -e "${RED}        Please change the volume as follows:${RESET}"
+    echo 2>&1
+    echo 2>&1 -e "${CYANBOLD}     '$OLD_CONFIG'${RESET} -> ${CYANBOLD}'$CONFIG_DIR'${RESET}"
+    echo 2>&1
+    echo 2>&1 -e "${RED}######################################################${RESET}"
+    echo 2>&1
+
+    CONFIG_DIR="$OLD_CONFIG"
+fi
+
+if su-exec -e [ ! -w "$CONFIG_DIR" ]; then
+    echo 2>&1 -e "${RED}####################### WARNING #######################${RESET}"
+    echo 2>&1
+    echo 2>&1 -e "${RED}     No permission to write in '$CONFIG_DIR' directory.${RESET}"
+    echo 2>&1 -e "${RED}       Correcting permissions to prevent a crash.${RESET}"
+    echo 2>&1
+    echo 2>&1 -e "${RED}#######################################################${RESET}"
+    echo 2>&1
+
+    chown "$SUID:$SGID" "$CONFIG_DIR"
+    chmod o+rw "$CONFIG_DIR"
+fi
+
+export CONFIG_DIR
+export PREF_FILE="$CONFIG_DIR/Preferences.xml"
+
+exec su-exec -e sh <<EOF
+
+. plex-util.sh
+
+# Generate a default configuration on first run, including some user-specified values
+if [ ! -e "\$PREF_FILE" ]; then
+    . gen-config.sh
+fi
+
+# Changes the log verbosity (Environment variable takes precedence on Plex Config)
+if [ "$LOG_VERBOSE" = "1" ]; then
+    setPref "LogVerbose" "1"
+elif [ "$LOG_VERBOSE" = "0" ]; then
+    setPref "LogVerbose" "0"
+elif [ ! -z "$LOG_VERBOSE" ]; then
+    2>&1 echo -e "${RED}LOG_VERBOSE value '$LOG_VERBOSE' is invalid${RESET}"
+    exit 1
+fi
+
+# Changes the debug verbosity (Environment variable takes precedence on Plex Config)
+if [ "$LOG_DEBUG" = "1" ]; then
+    setPref "logDebug" "1"
+elif [ "$LOG_DEBUG" = "0" ]; then
+    setPref "logDebug" "0"
+elif [ ! -z "$LOG_DEBUG" ]; then
+    2>&1 echo -e "${RED}LOG_DEBUG value '$LOG_DEBUG' is invalid${RESET}"
+    exit 1
+fi
+
+# Always attempt to claim an unclaimed server in case it was signed out
+token="\$(getPref "PlexOnlineToken")"
+if [ ! -z "\${PLEX_CLAIM}" ] && [ -z "\${token}" ]; then
+    claim-server.sh --load-client-id --save
+fi
+
+# Duplicate the Plex logs to stdout (docker logs)
+tail -Fn 0 "\$CONFIG_DIR/Logs/Plex Media Server.log" 2>/dev/null &
+
+# Use a random pidfile
+export PLEX_MEDIA_SERVER_PIDFILE="\$(mktemp -ut pms-pid.XXXXXX)"
+
+exec "\$PLEX_MEDIA_SERVER_HOME/Plex Media Server"
+
+EOF
