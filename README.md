@@ -63,8 +63,8 @@ Finally, navigate to [app.plex.tv/desktop](https://app.plex.tv/desktop) or [your
 
 ### Environment
 
-- `$SUID`                 - User ID to run as _default: 900_
-- `$SGID`                 - Group ID to run as _default: 900_
+- `$SUID`                 - User ID to run as _default: 1001_
+- `$SGID`                 - Group ID to run as _default: 1001_
 - `$ALLOWED_NETWORKS`     - IP/netmask entries which allow access to the server without requiring authorization. We recommend you set this only if you do not sign in your server. For example `192.168.1.0/24,172.16.0.0/16` will allow access to the entire `192.168.1.x` range and the `172.16.x.x` range.
 - `$ADVERTISE_IP`         - This variable defines the additional IPs on which the server may be be found. For example: `http://10.1.1.23:32400`. This adds to the list where the server advertises that it can be found.
 - `$DISABLE_REMOTE_SEC`   -
