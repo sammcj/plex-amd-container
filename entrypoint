@@ -18,7 +18,7 @@ if [ ! -x /dev/dri/card0 ] || [ ! -x /dev/dri/renderD128 ]; then
     echo 2>&1 -e "${RED}#######################################################${RESET}"
     echo 2>&1
 
-    chmod 777 /dev/dri/card0
+    chmod 777 /dev/dri/card*
     chmod 777 /dev/dri/renderD128
 fi
 
